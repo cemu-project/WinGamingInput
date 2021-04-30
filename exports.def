@@ -2,6 +2,7 @@ EXPORTS
  AddControllerChanged=?AddControllerChanged@WindowsGamingInput@@YAXP6AXW4EventType@1@W4ControllerType@1@V?$variant@_KV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@std@@@Z@Z
  RemoveControllerChanged=?RemoveControllerChanged@WindowsGamingInput@@YAXP6AXW4EventType@1@W4ControllerType@1@V?$variant@_KV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@std@@@Z@Z
 
+ Gamepad_IsInitialized=?IsInitialized@Gamepad@WindowsGamingInput@@YA_NXZ
  Gamepad_GetCount=?GetCount@Gamepad@WindowsGamingInput@@YA_KXZ
  Gamepad_IsConnected=?IsConnected@Gamepad@WindowsGamingInput@@YA_N_K@Z
  Gamepad_IsWireless=?IsWireless@Gamepad@WindowsGamingInput@@YA_N_KAEA_N@Z
@@ -10,6 +11,7 @@ EXPORTS
  Gamepad_GetVibration=?GetVibration@Gamepad@WindowsGamingInput@@YA_N_KAEAUVibration@2@@Z
  Gamepad_SetVibration=?SetVibration@Gamepad@WindowsGamingInput@@YA_N_KAEBUVibration@2@@Z
 
+ RawGameController_IsInitialized=?IsInitialized@RawGameController@WindowsGamingInput@@YA_NXZ
  RawGameController_GetCount=?GetCount@RawGameController@WindowsGamingInput@@YA_KXZ
  RawGameController_GetControllers=?GetControllers@RawGameController@WindowsGamingInput@@YA_KPEAUDescription@RawController@2@_K@Z
  RawGameController_GetController=?GetController@RawGameController@WindowsGamingInput@@YA_NV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@AEAUDescription@RawController@2@@Z

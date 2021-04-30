@@ -71,7 +71,7 @@ void ScanGamepads()
 	}
 }
 
-EventRegistrationToken g_add_gamepad_token;
+EventRegistrationToken g_add_gamepad_token{};
 HRESULT OnGamepadAdded(IInspectable* sender, IGamepad* gamepad)
 {
 #ifdef _DEBUG
@@ -120,7 +120,7 @@ HRESULT OnGamepadAdded(IInspectable* sender, IGamepad* gamepad)
 	return S_OK;
 }
 
-EventRegistrationToken g_remove_gamepad_token;
+EventRegistrationToken g_remove_gamepad_token{};
 HRESULT OnGamepadRemoved(IInspectable* sender, IGamepad* gamepad)
 {
 #ifdef _DEBUG
@@ -226,7 +226,7 @@ void ScanRawGameControllers()
 	}
 }
 
-EventRegistrationToken g_add_rcontroller_token;
+EventRegistrationToken g_add_rcontroller_token{};
 
 HRESULT OnRawGameControllerAdded(IInspectable* sender, IRawGameController* controller)
 {
@@ -264,7 +264,7 @@ HRESULT OnRawGameControllerAdded(IInspectable* sender, IRawGameController* contr
 	return S_OK;
 }
 
-EventRegistrationToken g_remove_rcontroller_token;
+EventRegistrationToken g_remove_rcontroller_token{};
 
 HRESULT OnRawGameControllerRemoved(IInspectable* sender, IRawGameController* controller)
 {
@@ -311,48 +311,66 @@ BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 			{
 				auto hr = RoGetActivationFactory(HStringReference(L"Windows.Gaming.Input.Gamepad").Get(),
 				                                 __uuidof(IGamepadStatics), (void**)&g_gamepad_statics);
-				assert(SUCCEEDED(hr));
+				if (SUCCEEDED(hr) && g_gamepad_statics)
+				{
 
-				hr = g_gamepad_statics->add_GamepadAdded(
-					Callback<__FIEventHandler_1_Windows__CGaming__CInput__CGamepad>(OnGamepadAdded).Get(),
-					&g_add_gamepad_token);
-				assert(SUCCEEDED(hr));
+					hr = g_gamepad_statics->add_GamepadAdded(
+						Callback<__FIEventHandler_1_Windows__CGaming__CInput__CGamepad>(OnGamepadAdded).Get(),
+						&g_add_gamepad_token);
+					assert(SUCCEEDED(hr));
 
-				hr = g_gamepad_statics->add_GamepadRemoved(
-					Callback<__FIEventHandler_1_Windows__CGaming__CInput__CGamepad>(OnGamepadRemoved).Get(),
-					&g_remove_gamepad_token);
-				assert(SUCCEEDED(hr));
+					hr = g_gamepad_statics->add_GamepadRemoved(
+						Callback<__FIEventHandler_1_Windows__CGaming__CInput__CGamepad>(OnGamepadRemoved).Get(),
+						&g_remove_gamepad_token);
+					assert(SUCCEEDED(hr));
 
 #ifdef _DEBUG
-				std::cout << "Windows.Gaming.Input.Gamepad initialized" << std::endl;
+					std::cout << "Windows.Gaming.Input.Gamepad initialized" << std::endl;
 #endif
+				}
+				else
+				{
+#ifdef _DEBUG
+					std::cout << "Windows.Gaming.Input.Gamepad init failed: 0x" << std::hex << (uintptr_t)hr << std::endl;
+#endif
+				}
 			}
-			
-			ScanGamepads();
+
+			if(g_gamepad_statics)
+				ScanGamepads();
 			
 			if (!g_rcontroller_statics)
 			{
 				auto hr = RoGetActivationFactory(HStringReference(L"Windows.Gaming.Input.RawGameController").Get(),
 				                                 __uuidof(IRawGameControllerStatics), (void**)&g_rcontroller_statics);
-				assert(SUCCEEDED(hr));
+				if (SUCCEEDED(hr) && g_rcontroller_statics)
+				{
+					hr = g_rcontroller_statics->add_RawGameControllerAdded(
+						Callback<__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController>(OnRawGameControllerAdded).
+						Get(),
+						&g_add_rcontroller_token);
+					assert(SUCCEEDED(hr));
 
-				hr = g_rcontroller_statics->add_RawGameControllerAdded(
-					Callback<__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController>(OnRawGameControllerAdded).
-					Get(),
-					&g_add_rcontroller_token);
-				assert(SUCCEEDED(hr));
-
-				hr = g_rcontroller_statics->add_RawGameControllerRemoved(
-					Callback<__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController>(
-						OnRawGameControllerRemoved).Get(),
-					&g_remove_rcontroller_token);
-				assert(SUCCEEDED(hr));
+					hr = g_rcontroller_statics->add_RawGameControllerRemoved(
+						Callback<__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController>(
+							OnRawGameControllerRemoved).Get(),
+						&g_remove_rcontroller_token);
+					assert(SUCCEEDED(hr));
 
 #ifdef _DEBUG
-				std::cout << "Windows.Gaming.Input.RawGameController initialized" << std::endl;
+					std::cout << "Windows.Gaming.Input.RawGameController initialized" << std::endl;
 #endif
+				}
+				else
+				{
+#ifdef _DEBUG
+					std::cout << "Windows.Gaming.Input.RawGameController init failed: 0x" << std::hex << (uintptr_t)hr << std::endl;
+#endif
+				}
 			}
-			ScanRawGameControllers();
+
+			if(g_rcontroller_statics)
+				ScanRawGameControllers();
 		}).detach();
 	}
 	else if (reason == DLL_PROCESS_DETACH)
@@ -369,8 +387,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 			g_gamepads.clear();
 			if (g_gamepad_statics)
 			{
-				g_gamepad_statics->remove_GamepadAdded(g_add_rcontroller_token);
-				g_gamepad_statics->remove_GamepadRemoved(g_remove_rcontroller_token);
+				if(g_add_gamepad_token.value)
+					g_gamepad_statics->remove_GamepadAdded(g_add_gamepad_token);
+
+				if(g_remove_gamepad_token.value)
+					g_gamepad_statics->remove_GamepadRemoved(g_remove_gamepad_token);
 			}
 		}
 		
@@ -381,8 +402,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 			g_rcontrollers.clear();
 			if (g_rcontroller_statics)
 			{
-				g_rcontroller_statics->remove_RawGameControllerAdded(g_add_rcontroller_token);
-				g_rcontroller_statics->remove_RawGameControllerRemoved(g_remove_rcontroller_token);
+				if(g_add_rcontroller_token.value)
+					g_rcontroller_statics->remove_RawGameControllerAdded(g_add_rcontroller_token);
+				
+				if(g_remove_rcontroller_token.value)
+					g_rcontroller_statics->remove_RawGameControllerRemoved(g_remove_rcontroller_token);
 			}
 		}
 	}
@@ -405,7 +429,7 @@ namespace WindowsGamingInput
 		const auto rm = std::ranges::remove(g_callbacks, cb);
 		g_callbacks.erase(rm.begin(), rm.end());
 	}
-	
+
 	bool GetBatteryInfo(ComPtr<IGameControllerBatteryInfo> battery_info, BatteryStatus& status, double& battery)
 	{
 		ComPtr<ABI::Windows::Devices::Power::IBatteryReport> report;
@@ -441,6 +465,11 @@ namespace WindowsGamingInput
 	
 	namespace Gamepad
 	{
+		bool IsInitialized()
+		{
+			return g_gamepad_statics != nullptr;
+		}
+
 		size_t GetCount()
 		{
 			std::shared_lock lock(g_gamepad_mutex);
@@ -544,6 +573,11 @@ namespace WindowsGamingInput
 
 	namespace RawGameController
 	{
+		bool IsInitialized()
+		{
+			return g_rcontroller_statics != nullptr;
+		}
+		
 		size_t GetCount()
 		{
 			std::shared_lock lock(g_rcontroller_mutex);

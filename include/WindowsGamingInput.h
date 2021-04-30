@@ -183,6 +183,7 @@ namespace WindowsGamingInput
 
 	namespace Gamepad
 	{
+		DLLEXPORT bool IsInitialized();
 		DLLEXPORT size_t GetCount();
 		DLLEXPORT bool IsConnected(size_t index);
 		DLLEXPORT bool GetState(size_t index, GamepadState& state);
@@ -206,6 +207,7 @@ namespace WindowsGamingInput
 			size_t axis_count;
 		};
 		// <uid, display_name>
+		DLLEXPORT bool IsInitialized();
 		DLLEXPORT size_t GetCount();
 		DLLEXPORT size_t GetControllers(Description* controllers, size_t count);
 		DLLEXPORT bool GetController(std::wstring_view uid, Description& description);
